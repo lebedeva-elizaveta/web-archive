@@ -1,0 +1,10 @@
+flask~=3.0.3
+beautifulsoup4~=4.12.3
+SQLAlchemy~=2.0.30
+requests~=2.32.3
+validators~=0.28.3
+whois~=1.20240129.2
+ipwhois~=1.2.0
+python-whois~=0.9.4
+python-dotenv~=1.0.1
+alembic~=1.13.1

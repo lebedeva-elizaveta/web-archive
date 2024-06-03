@@ -1,0 +1,19 @@
+<!-- show_page.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Show Archived Page</title>
+</head>
+<body>
+    {% if archived_page %}
+        <div>
+            <div>{{ archived_page.html_code|safe }}</div>
+        </div>
+    {% else %}
+        <p>Page not found.</p>
+    {% endif %}
+</body>
+</html>

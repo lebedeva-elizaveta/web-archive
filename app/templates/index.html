@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Архиватор страниц</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: 60%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #displayArea {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+
+
+
+
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Архиватор страниц</h1>
+
+    <form id="addForm">
+        <label for="urlInput">Введите URL:</label>
+        <input type="text" id="urlInput" name="urlInput" required>
+        <button type="button" onclick="addPage()">Добавить</button>
+    </form>
+
+    <button type="button" onclick="showPage()">Показать сохранённую страницу</button>
+
+    <!-- Добавленная кнопка для отображения информации о домене -->
+    <button type="button" id="domainInfoButton" onclick="toggleDomainInfo()">Показать информацию о домене</button>
+
+    <!-- Добавьте этот div в тело вашего HTML -->
+    <div id="displayArea"></div>
+    <script> displayArea.style.display = 'none'; </script>
+
+
+</div>
+
+<script>
+        function addPage() {
+            var urlInput = document.getElementById('urlInput').value;
+            fetch('/archive', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ url: urlInput }),
+            })
+            .then(response => response.json())
+            .then(data => alert(data.message))
+            .catch(error => console.error('Error:', error));
+        }
+
+        function showPage() {
+            var urlInput = document.getElementById('urlInput').value;
+
+            // Кодирование URL перед передачей
+            var encodedUrl = encodeURIComponent(urlInput);
+
+            // Перенаправляем пользователя на новый маршрут
+            window.location.href = '/view/' + encodedUrl;
+        }
+
+        // Функция для отображения информации о домене
+        function showDomainInfo() {
+            var urlInput = document.getElementById('urlInput').value;
+            fetch('/view_domain_info/' + encodeURIComponent(urlInput))
+                .then(response => response.text())
+                .then(html => {
+                    // Вставляем HTML-код в область отображения
+                    document.getElementById('displayArea').innerHTML = html;
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+            function toggleDomainInfo() {
+        var displayArea = document.getElementById('displayArea');
+        var domainInfoButton = document.getElementById('domainInfoButton');
+
+        if (displayArea.style.display === 'none') {
+            // Если область скрыта, показываем её
+            displayArea.style.display = 'block';
+            domainInfoButton.textContent = 'Скрыть информацию о домене';
+            showDomainInfo()
+        } else {
+            // Если область отображается, скрываем её
+            displayArea.style.display = 'none';
+            domainInfoButton.textContent = 'Показать информацию о домене';
+        }
+    }
+
+
+
+
+
+</script>
+</body>
+</html>
