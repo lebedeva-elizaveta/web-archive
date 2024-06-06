@@ -8,3 +8,5 @@ ipwhois~=1.2.0
 python-whois~=0.9.4
 python-dotenv~=1.0.1
 alembic~=1.13.1
+marshmallow~=3.21.2
+pytz~=2024.1

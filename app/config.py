@@ -10,3 +10,5 @@ class Config:
 
 
 settings = Config()
+
+FOLDER_FILES = 'app/uploads/files/'

@@ -3,4 +3,5 @@
 .env
 /__pycache__/
 /app/__pycache__/
-/migrations/pycache/
+/app/services/__pycache__/
+migrations/__pycache__/

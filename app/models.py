@@ -1,5 +1,10 @@
-from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
+import pytz as pytz
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.sql import sqltypes
+
+moscow_tz = pytz.timezone('Europe/Moscow')
 db = SQLAlchemy()
 
 
@@ -7,8 +12,7 @@ class ArchivedPage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     url = db.Column(db.String, nullable=False)
     html = db.Column(db.String, nullable=False)
-    timestamp = db.Column(db.TIMESTAMP, default=db.func.now())
-    domain_info = db.relationship('DomainInfo', backref='archived_page', uselist=False)
+    timestamp = db.Column(sqltypes.TIMESTAMP(timezone=True), default=datetime.utcnow().astimezone(moscow_tz))
 
 
 class DomainInfo(db.Model):
@@ -18,3 +22,5 @@ class DomainInfo(db.Model):
     whois_protocol = db.Column(db.Text)
     network_info = db.Column(db.Text)
     archived_page_id = db.Column(db.Integer, db.ForeignKey('archived_page.id'))
+
+    archived_page = db.relationship('ArchivedPage', backref=db.backref('pages', lazy='dynamic'))
