@@ -11,3 +11,4 @@ alembic~=1.13.1
 marshmallow~=3.21.2
 pytz~=2024.1
 cryptography~=42.0.8
+flask-migrate~=4.0.7
