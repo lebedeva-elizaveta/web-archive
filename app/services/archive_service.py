@@ -37,14 +37,14 @@ class ArchiveService:
         return new_info
 
     @staticmethod
-    def add_archive_page(url):
+    def add_archive_page(url, user_id):
         html_code = ArchiveService._fetch_html(url)
         if not html_code:
             return False, 'Ошибка получения HTML'
         processed_html = ArchiveService._process_html(html_code, url)
         if not processed_html:
             return False, 'Ошибка обработки HTML'
-        new_page = ArchiveService._save_archived_page(url, processed_html)
+        new_page = ArchiveService._save_archived_page(url, processed_html, user_id)
         domain_info = ArchiveService._save_domain_info(url, new_page.id)
         if not domain_info:
             return False, 'Ошибка сохранения информации о домене'
@@ -117,10 +117,11 @@ class ArchiveService:
         return result
 
     @staticmethod
-    def _save_archived_page(url, html_path):
+    def _save_archived_page(url, html_path, user_id):
         data = {
             "url": url,
-            "html": html_path
+            "html": html_path,
+            "user_id": user_id
         }
         result = ArchiveService.create_page(data)
         return result

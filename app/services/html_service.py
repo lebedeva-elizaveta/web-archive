@@ -91,8 +91,6 @@ class HTMLProcessor:
 
             if img_format:
                 img_tag['src'] = f'data:image/{img_format};base64,{img_data}'
-            else:
-                app.logger.warning('Неизвестный формат изображения: %s', urljoin(self.url, src))
 
         except requests.RequestException as img_req_err:
             app.logger.warning('Ошибка загрузки изображения: %s', str(img_req_err))

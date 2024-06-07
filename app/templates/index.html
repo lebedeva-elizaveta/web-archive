@@ -20,6 +20,7 @@
             background-color: #fff;
             border-radius: 5px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative; /* Добавлено для позиционирования кнопки выхода */
         }
 
         h1 {
@@ -63,17 +64,48 @@
             padding: 20px;
             background-color: #f0f0f0;
             border-radius: 5px;
+            display: none; /* Изначально скрываем область отображения */
         }
 
+        /* Стили для кнопки выхода */
+        #logoutForm {
+            position: absolute;
+            bottom: 0px; /* Подвинули кнопку вниз */
+            right: 40px; /* Подвинули кнопку вправо */
+        }
 
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
 
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
 
-
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Архиватор страниц</h1>
+
+    <!-- Флеш-сообщения -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
 
     <form id="addForm">
         <label for="urlInput">Введите URL:</label>
@@ -86,51 +118,60 @@
     <!-- Добавленная кнопка для отображения информации о домене -->
     <button type="button" id="domainInfoButton" onclick="toggleDomainInfo()">Показать информацию о домене</button>
 
-    <!-- Добавьте этот div в тело вашего HTML -->
+    <!-- Добавленный div для отображения информации о домене -->
     <div id="displayArea"></div>
-    <script> displayArea.style.display = 'none'; </script>
 
-
+    <!-- Кнопка выхода -->
+    <form id="logoutForm" method="POST" action="/logout">
+        <button type="submit">Выйти</button>
+    </form>
 </div>
 
 <script>
-        function addPage() {
-            var urlInput = document.getElementById('urlInput').value;
-            fetch('/archive', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ url: urlInput }),
+    function addPage() {
+        var urlInput = document.getElementById('urlInput').value;
+        fetch('/archive', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: urlInput }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Выводим сообщение в соответствии с типом сообщения
+            if (data.success) {
+                showSuccessMessage(data.message);
+            } else {
+                showErrorMessage(data.message);
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function showPage() {
+        var urlInput = document.getElementById('urlInput').value;
+
+        // Кодирование URL перед передачей
+        var encodedUrl = encodeURIComponent(urlInput);
+
+        // Перенаправляем пользователя на новый маршрут
+        window.location.href = '/view/' + encodedUrl;
+    }
+
+    // Функция для отображения информации о домене
+    function showDomainInfo() {
+        var urlInput = document.getElementById('urlInput').value;
+        fetch('/view_domain_info/' + encodeURIComponent(urlInput))
+            .then(response => response.text())
+            .then(html => {
+                // Вставляем HTML-код в область отображения
+                document.getElementById('displayArea').innerHTML = html;
             })
-            .then(response => response.json())
-            .then(data => alert(data.message))
             .catch(error => console.error('Error:', error));
-        }
+    }
 
-        function showPage() {
-            var urlInput = document.getElementById('urlInput').value;
-
-            // Кодирование URL перед передачей
-            var encodedUrl = encodeURIComponent(urlInput);
-
-            // Перенаправляем пользователя на новый маршрут
-            window.location.href = '/view/' + encodedUrl;
-        }
-
-        // Функция для отображения информации о домене
-        function showDomainInfo() {
-            var urlInput = document.getElementById('urlInput').value;
-            fetch('/view_domain_info/' + encodeURIComponent(urlInput))
-                .then(response => response.text())
-                .then(html => {
-                    // Вставляем HTML-код в область отображения
-                    document.getElementById('displayArea').innerHTML = html;
-                })
-                .catch(error => console.error('Error:', error));
-        }
-
-            function toggleDomainInfo() {
+    function toggleDomainInfo() {
         var displayArea = document.getElementById('displayArea');
         var domainInfoButton = document.getElementById('domainInfoButton');
 
@@ -138,7 +179,7 @@
             // Если область скрыта, показываем её
             displayArea.style.display = 'block';
             domainInfoButton.textContent = 'Скрыть информацию о домене';
-            showDomainInfo()
+            showDomainInfo();
         } else {
             // Если область отображается, скрываем её
             displayArea.style.display = 'none';
@@ -146,10 +187,25 @@
         }
     }
 
+    function showSuccessMessage(message) {
+        var flashMessage = document.createElement('div');
+        flashMessage.classList.add('flash-message', 'success');
+        flashMessage.textContent = message;
+        document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
+        setTimeout(function() {
+            flashMessage.remove();
+        }, 3000); // Удаляем сообщение через 3 секунды
+    }
 
-
-
-
+    function showErrorMessage(message) {
+        var flashMessage = document.createElement('div');
+        flashMessage.classList.add('flash-message', 'error');
+        flashMessage.textContent = message;
+        document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
+        setTimeout(function() {
+            flashMessage.remove();
+        }, 3000); // Удаляем сообщение через 3 секунды
+    }
 </script>
 </body>
 </html>

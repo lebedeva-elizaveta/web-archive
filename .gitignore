@@ -5,3 +5,5 @@
 /app/__pycache__/
 /app/services/__pycache__/
 migrations/__pycache__/
+migrations/versions/__pycache__/
+/app/uploads/files/*.html

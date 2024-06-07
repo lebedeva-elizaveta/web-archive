@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="email"], input[type="password"] {
+            width: 60%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-right: 10px;
+            box-sizing: border-box;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .flash-message {
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Регистрация</h1>
+
+    <!-- Флеш-сообщения -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="flash-message {{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('register') }}">
+        <label for="emailInput">Email:</label>
+        <input type="email" id="emailInput" name="email" required>
+        <br><br>
+        <label for="passwordInput">Пароль:</label>
+        <input type="password" id="passwordInput" name="password" required>
+        <br><br>
+        <button type="submit">Зарегистрироваться</button>
+    </form>
+
+    <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a></p>
+</div>
+
+<!-- Скрипт для автоматического перенаправления -->
+<script>
+    // Получаем URL страницы, чтобы проверить, есть ли в нем параметр success
+    const urlParams = new URLSearchParams(window.location.search);
+    const success = urlParams.get('success');
+
+    // Если параметр success равен true, то выполняем перенаправление
+    if (success === 'true') {
+        window.location.href = '{{ url_for('login') }}';
+    }
+</script>
+
+</body>
+</html>
