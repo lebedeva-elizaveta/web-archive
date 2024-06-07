@@ -54,6 +54,8 @@ class HTMLProcessor:
 
     def _process_css_link(self, href, link_tag):
         try:
+            if href.startswith('//'):
+                href = 'https:' + href
             css_response = requests.get(urljoin(self.url, href))
             css_response.raise_for_status()
             css_data = base64.b64encode(css_response.content).decode('utf-8')
@@ -63,6 +65,8 @@ class HTMLProcessor:
 
     def _process_script(self, src, script_tag):
         try:
+            if src.startswith('//'):
+                src = 'https:' + src
             js_response = requests.get(urljoin(self.url, src))
             js_response.raise_for_status()
             js_data = base64.b64encode(js_response.content).decode('utf-8')
@@ -131,6 +135,7 @@ class HTMLProcessor:
                 icon_data = base64.b64encode(icon_response.content).decode('utf-8')
                 icon_tag['class'] = []
                 icon_tag[
-                    'style'] = f'background-image: url(data:image/svg+xml;base64,{icon_data}); background-size: contain; display: inline-block; width: 1em; height: 1em;'
+                    'style'] = f'background-image: url(data:image/svg+xml;base64,{icon_data}); ' \
+                               f'background-size: contain; display: inline-block; width: 1em; height: 1em;'
             except requests.RequestException as icon_req_err:
                 app.logger.warning('Ошибка при загрузке иконки: %s', str(icon_req_err))

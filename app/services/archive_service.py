@@ -51,9 +51,9 @@ class ArchiveService:
         return True, 'Страница успешно сохранена'
 
     @staticmethod
-    def view_all_pages(url):
+    def view_all_pages(url, user_id):
         try:
-            archived_pages = ArchiveService._get_archived_pages(url)
+            archived_pages = ArchiveService._get_archived_pages(url, user_id)
             if archived_pages:
                 return True, archived_pages
             else:
@@ -83,6 +83,15 @@ class ArchiveService:
             return True, domain_info
         except Exception as e:
             return False, str(e)
+
+    @classmethod
+    def get_domain_info(cls, page_id, user_id):
+        page = cls.model_page.query.filter_by(id=page_id, user_id=user_id).first()
+        if page:
+            domain_info = cls.model_domain_info.query.filter_by(archived_page_id=page_id).first()
+            return True, domain_info
+        else:
+            return False, 'Информация о домене не найдена'
 
     @staticmethod
     def _fetch_html(url):
@@ -127,9 +136,9 @@ class ArchiveService:
         return result
 
     @classmethod
-    def _get_archived_pages(cls, url):
+    def _get_archived_pages(cls, url, user_id):
         try:
-            return cls.model_page.query.filter_by(url=url).order_by(
+            return cls.model_page.query.filter_by(url=url, user_id=user_id).order_by(
                 cls.model_page.timestamp.desc()
             ).all()
         except Exception as e:

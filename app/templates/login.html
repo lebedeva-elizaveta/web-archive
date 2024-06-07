@@ -122,13 +122,11 @@
         })
         .then(response => response.json())
         .then(data => {
-            // Выводим сообщение в соответствии с типом сообщения
             if (data.success) {
                 showSuccessMessage(data.message);
-                // Перенаправляем на страницу после успешного входа
                 setTimeout(function() {
                     window.location.href = '{{ url_for('home') }}';
-                }, 3000); // Через 3 секунды перенаправляем на главную страницу
+                }, 3000);
             } else {
                 showErrorMessage(data.message);
             }
@@ -146,7 +144,7 @@
         document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
         setTimeout(function() {
             flashMessage.remove();
-        }, 3000); // Удаляем сообщение через 3 секунды
+        }, 3000);
     }
 
     function showErrorMessage(message) {
@@ -156,7 +154,7 @@
         document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
         setTimeout(function() {
             flashMessage.remove();
-        }, 3000); // Удаляем сообщение через 3 секунды
+        }, 3000);
     }
 </script>
 

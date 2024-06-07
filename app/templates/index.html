@@ -59,6 +59,7 @@
             background-color: #0056b3;
         }
 
+
         #displayArea {
             margin-top: 20px;
             padding: 20px;
@@ -67,11 +68,20 @@
             display: none; /* Изначально скрываем область отображения */
         }
 
-        /* Стили для кнопки выхода */
-        #logoutForm {
-            position: absolute;
-            bottom: 0px; /* Подвинули кнопку вниз */
-            right: 40px; /* Подвинули кнопку вправо */
+        #logoutButton {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            text-align: center;
+            text-decoration: none;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        #logoutButton:hover {
+            background-color: #c82333;
         }
 
         .flash-message {
@@ -117,14 +127,10 @@
 
     <!-- Добавленная кнопка для отображения информации о домене -->
     <button type="button" id="domainInfoButton" onclick="toggleDomainInfo()">Показать информацию о домене</button>
-
+    <button type="button" id="logoutButton" onclick="logout()">Выйти</button>
     <!-- Добавленный div для отображения информации о домене -->
     <div id="displayArea"></div>
 
-    <!-- Кнопка выхода -->
-    <form id="logoutForm" method="POST" action="/logout">
-        <button type="submit">Выйти</button>
-    </form>
 </div>
 
 <script>
@@ -139,11 +145,10 @@
         })
         .then(response => response.json())
         .then(data => {
-            // Выводим сообщение в соответствии с типом сообщения
             if (data.success) {
                 showSuccessMessage(data.message);
             } else {
-                showErrorMessage(data.message);
+                showErrorMessage(data.error);
             }
         })
         .catch(error => console.error('Error:', error));
@@ -151,21 +156,24 @@
 
     function showPage() {
         var urlInput = document.getElementById('urlInput').value;
+        if (!urlInput) {
+            showErrorMessage('Введите URL');
+            return;
+        }
 
-        // Кодирование URL перед передачей
         var encodedUrl = encodeURIComponent(urlInput);
-
-        // Перенаправляем пользователя на новый маршрут
         window.location.href = '/view/' + encodedUrl;
     }
 
-    // Функция для отображения информации о домене
     function showDomainInfo() {
         var urlInput = document.getElementById('urlInput').value;
+        if (!urlInput) {
+            showErrorMessage('Введите URL');
+            return;
+        }
         fetch('/view_domain_info/' + encodeURIComponent(urlInput))
             .then(response => response.text())
             .then(html => {
-                // Вставляем HTML-код в область отображения
                 document.getElementById('displayArea').innerHTML = html;
             })
             .catch(error => console.error('Error:', error));
@@ -174,17 +182,34 @@
     function toggleDomainInfo() {
         var displayArea = document.getElementById('displayArea');
         var domainInfoButton = document.getElementById('domainInfoButton');
-
+        var urlInput = document.getElementById('urlInput').value;
+        if (!urlInput) {
+            showErrorMessage('Введите URL');
+            return;
+        }
         if (displayArea.style.display === 'none') {
-            // Если область скрыта, показываем её
             displayArea.style.display = 'block';
             domainInfoButton.textContent = 'Скрыть информацию о домене';
             showDomainInfo();
         } else {
-            // Если область отображается, скрываем её
             displayArea.style.display = 'none';
             domainInfoButton.textContent = 'Показать информацию о домене';
         }
+    }
+
+    function logout() {
+        fetch('/logout', {
+            method: 'POST',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/login';
+            } else {
+                showErrorMessage(data.error);
+            }
+        })
+        .catch(error => console.error('Error:', error));
     }
 
     function showSuccessMessage(message) {
@@ -194,7 +219,7 @@
         document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
         setTimeout(function() {
             flashMessage.remove();
-        }, 3000); // Удаляем сообщение через 3 секунды
+        }, 3000);
     }
 
     function showErrorMessage(message) {
@@ -204,8 +229,13 @@
         document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
         setTimeout(function() {
             flashMessage.remove();
-        }, 3000); // Удаляем сообщение через 3 секунды
+        }, 3000);
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var displayArea = document.getElementById('displayArea');
+        displayArea.style.display = 'none';
+    });
 </script>
 </body>
 </html>

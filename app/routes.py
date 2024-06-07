@@ -1,10 +1,12 @@
 import os
 from flask import render_template, request, redirect, send_from_directory, render_template_string, url_for, \
     session, flash, jsonify
+from marshmallow import ValidationError
 
 from app.exceptions import UserAlreadyExistsException
 from app.main import app
 from app.models import db
+from app.schemas import ArchivedPageSchema, DomainInfoSchema
 from app.services.archive_service import ArchiveService
 from app.services.user_service import UserService
 
@@ -53,8 +55,9 @@ def login():
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('logged_in', None)
+    session.pop('_flashes', None)
     flash('Вы вышли из системы', 'success')
-    return redirect(url_for('login'))
+    return jsonify({'success': True, 'message': 'Вы вышли из системы'})
 
 
 @app.route('/archive', methods=['POST'])
@@ -62,6 +65,12 @@ def archive_page():
     data = request.json
     url = data.get('url')
     user_id = session.get('user_id')
+    try:
+        ArchivedPageSchema().load({'url': url, 'html': '<dummy>', 'user_id': user_id})
+    except ValidationError:
+        message = 'Некорректный URL'
+        flash(message, 'error')
+        return jsonify({'success': False, 'error': message}), 400
     success, message = ArchiveService.add_archive_page(url, user_id)
     if success:
         flash(message, 'success')
@@ -72,10 +81,16 @@ def archive_page():
 
 
 @app.route('/view/<path:url>')
-def view_page(url):
-    success, result = ArchiveService.view_all_pages(url)
+def view_pages(url):
+    user_id = session.get('user_id')
+    if not url:
+        flash('Введите URL', 'error')
+        return redirect(url_for('index'))
+    success, result = ArchiveService.view_all_pages(url, user_id)
     if success:
-        return render_template('list_pages.html', archived_pages=result)
+        archived_page_schema = ArchivedPageSchema(many=True)
+        serialized_result = archived_page_schema.dump(result)
+        return render_template('list_pages.html', archived_pages=serialized_result)
     else:
         return render_template('error_page.html', error=result), 404
 
@@ -95,6 +110,18 @@ def view_domain_info(url):
         return render_template('domain_info.html', domain_info=result)
     else:
         return render_template('error_page.html', error=result), 404
+
+
+@app.route('/get_domain_info/<int:page_id>')
+def get_domain_info(page_id):
+    user_id = session.get('user_id')
+    success, domain_info = ArchiveService.get_domain_info(page_id, user_id)
+    if success:
+        domain_info_schema = DomainInfoSchema()
+        domain_info_serialized = domain_info_schema.dump(domain_info)
+        return render_template('domain_info.html', domain_info=domain_info_serialized)
+    else:
+        return render_template('error_page.html', error=domain_info), 404
 
 
 @app.route('/uploads/files/<filename>')

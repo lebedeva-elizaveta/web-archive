@@ -29,7 +29,17 @@
             padding: 0;
         }
         li {
-            margin-bottom: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 10px;
+        }
+        .version-info-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .version-info {
+            flex: 1;
         }
         a {
             text-decoration: none;
@@ -42,22 +52,125 @@
             text-align: center;
             color: #666;
         }
+        .domain-info {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+        .show-info-button {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .show-info-button:hover {
+            background-color: #0056b3;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            padding: 10px 0;
+        }
+        .pagination li {
+            margin: 0 5px;
+            list-style: none;
+        }
+        .pagination a {
+            color: #007bff;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .pagination a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Выбор сохранённой версии страницы</h1>
-        {% if archived_pages %}
-            <ul>
-                {% for page in archived_pages %}
-                    <li>
-                        <a href="{{ url_for('show_page', page_id=page.id) }}">Version {{ loop.index }} - {{ page.timestamp }}</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% else %}
-            <p class="no-pages">Нет сохранённых версий для этого URL.</p>
-        {% endif %}
+        <ul id="pagesList"></ul>
+        <div id="pagination" class="pagination"></div>
     </div>
+
+    <script>
+        const archivedPages = {{ archived_pages | tojson }};
+        const itemsPerPage = 10;
+        let currentPage = 1;
+
+        function renderPagination(totalPages) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const pageLink = document.createElement('a');
+                pageLink.textContent = i;
+                pageLink.href = '#';
+                pageLink.onclick = (function(page) {
+                    return function(event) {
+                        event.preventDefault();
+                        currentPage = page;
+                        renderPage(page);
+                    }
+                })(i);
+
+                const pageItem = document.createElement('li');
+                if (i === currentPage) {
+                    pageLink.style.fontWeight = 'bold';
+                }
+                pageItem.appendChild(pageLink);
+                pagination.appendChild(pageItem);
+            }
+        }
+
+        function renderPage(page) {
+            const startIndex = (page - 1) * itemsPerPage;
+            const endIndex = page * itemsPerPage;
+            const pagesList = document.getElementById('pagesList');
+
+            pagesList.innerHTML = '';
+            const currentItems = archivedPages.slice(startIndex, endIndex);
+            currentItems.forEach((page, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <div class="version-info-container">
+                        <div class="version-info">
+                            <a href="/show_page/${page.id}">Version ${startIndex + index + 1} - ${page.timestamp}</a>
+                        </div>
+                        <button class="show-info-button" onclick="toggleDomainInfo(this, ${page.id})">Информация о домене</button>
+                    </div>
+                    <div id="domainInfoArea-${page.id}" class="domain-info"></div>
+                `;
+                pagesList.appendChild(li);
+            });
+
+            renderPagination(Math.ceil(archivedPages.length / itemsPerPage));
+        }
+
+        function toggleDomainInfo(button, pageId) {
+            const domainInfoArea = document.getElementById('domainInfoArea-' + pageId);
+            if (domainInfoArea.style.display === 'none' || domainInfoArea.innerHTML === '') {
+                fetch(`/get_domain_info/${pageId}`)
+                    .then(response => response.text())
+                    .then(html => {
+                        domainInfoArea.innerHTML = html;
+                        domainInfoArea.style.display = 'block';
+                        button.textContent = 'Скрыть информацию о домене';
+                    })
+                    .catch(error => console.error('Error:', error));
+            } else {
+                domainInfoArea.style.display = 'none';
+                domainInfoArea.innerHTML = '';
+                button.textContent = 'Информация о домене';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            renderPage(currentPage);
+        });
+    </script>
 </body>
 </html>

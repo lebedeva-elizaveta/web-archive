@@ -106,11 +106,9 @@
 
 <!-- Скрипт для автоматического перенаправления -->
 <script>
-    // Получаем URL страницы, чтобы проверить, есть ли в нем параметр success
     const urlParams = new URLSearchParams(window.location.search);
     const success = urlParams.get('success');
 
-    // Если параметр success равен true, то выполняем перенаправление
     if (success === 'true') {
         window.location.href = '{{ url_for('login') }}';
     }

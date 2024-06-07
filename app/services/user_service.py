@@ -1,4 +1,7 @@
+from marshmallow import ValidationError
+
 from app.models import User
+from app.schemas import UserSchema
 from app.services.security_service import EncryptionService
 
 
@@ -7,6 +10,11 @@ class UserService:
         self.db = db
 
     def create_user(self, email, password):
+        user_data = {'email': email, 'password': password}
+        try:
+            UserSchema().load(user_data)
+        except ValidationError:
+            raise
         hashed_password = EncryptionService.generate_password_hash(password)
         new_user = User(email=email, password=hashed_password)
         self.db.session.add(new_user)
