@@ -4,22 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error Page</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            text-align: center;
-            padding: 50px;
-        }
-
-        h1 {
-            color: #dc3545;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='error_page.css') }}">
 </head>
 <body>
     <h1>Ошибка</h1>
     <p>Сохраненных страниц не найдено.</p>
-
 </body>
 </html>
