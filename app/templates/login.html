@@ -91,7 +91,7 @@
         {% endif %}
     {% endwith %}
 
-    <form id="loginForm">
+    <form method="POST" action="/login">
         <label for="emailInput">Email:</label>
         <input type="text" id="emailInput" name="email" required>
         <br><br>
@@ -103,69 +103,6 @@
 
     <p>Еще нет аккаунта? <a href="/register">Зарегистрируйтесь</a></p>
 </div>
-
-
-<!-- Скрипт для отображения сообщений -->
-<script>
-    document.getElementById('loginForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-
-        var email = document.getElementById('emailInput').value;
-        var password = document.getElementById('passwordInput').value;
-
-        fetch('/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ email: email, password: password }),
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showSuccessMessage(data.message);
-                setTimeout(function() {
-                    window.location.href = '{{ url_for('home') }}';
-                }, 3000);
-            } else {
-                showErrorMessage(data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showErrorMessage('Произошла ошибка при попытке входа.');
-        });
-    });
-
-    function showSuccessMessage(message) {
-        var flashMessage = document.createElement('div');
-        flashMessage.classList.add('flash-message', 'success');
-        flashMessage.textContent = message;
-        document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
-        setTimeout(function() {
-            flashMessage.remove();
-        }, 3000);
-    }
-
-    function showErrorMessage(message) {
-        var flashMessage = document.createElement('div');
-        flashMessage.classList.add('flash-message', 'error');
-        flashMessage.textContent = message;
-        document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
-        setTimeout(function() {
-            flashMessage.remove();
-        }, 3000);
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        var flashMessages = document.querySelectorAll('.flash-message');
-        flashMessages.forEach(function(message) {
-            setTimeout(function() {
-                message.remove();
-            }, 3000);
-        });
-    });
-</script>
 
 </body>
 </html>
