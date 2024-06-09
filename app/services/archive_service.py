@@ -1,3 +1,4 @@
+import asyncio
 import os
 import requests
 from bs4 import BeautifulSoup
@@ -18,36 +19,39 @@ class ArchiveService:
     def create_page(cls, data):
         try:
             validated_data = ArchivedPageSchema().load(data)
+            new_page = cls.model_page(**validated_data)
+            db.session.add(new_page)
+            db.session.commit()
+            return new_page
         except ValidationError:
             raise
-        new_page = cls.model_page(**validated_data)
-        db.session.add(new_page)
-        db.session.commit()
-        return new_page
 
     @classmethod
     def create_domain_info(cls, data):
         try:
             validated_data = DomainInfoSchema().load(data)
+            new_info = cls.model_domain_info(**validated_data)
+            db.session.add(new_info)
+            db.session.commit()
+            return new_info
         except ValidationError:
             raise
-        new_info = cls.model_domain_info(**validated_data)
-        db.session.add(new_info)
-        db.session.commit()
-        return new_info
 
     @staticmethod
     def add_archive_page(url, user_id):
         html_code = ArchiveService._fetch_html(url)
         if not html_code:
             return False, 'Ошибка получения HTML'
+
         processed_html = ArchiveService._process_html(html_code, url)
         if not processed_html:
             return False, 'Ошибка обработки HTML'
+
         new_page = ArchiveService._save_archived_page(url, processed_html, user_id)
         domain_info = ArchiveService._save_domain_info(url, new_page.id)
         if not domain_info:
             return False, 'Ошибка сохранения информации о домене'
+
         return True, 'Страница успешно сохранена'
 
     @staticmethod
@@ -56,8 +60,7 @@ class ArchiveService:
             archived_pages = ArchiveService._get_archived_pages(url, user_id)
             if archived_pages:
                 return True, archived_pages
-            else:
-                return False, 'Страницы не найдены'
+            return False, 'Страницы не найдены'
         except Exception as e:
             return False, str(e)
 
@@ -69,10 +72,8 @@ class ArchiveService:
                 success, file_path = ArchiveService.load_page_from_file(archived_page.html)
                 if success:
                     return True, file_path
-                else:
-                    return False, 'Ошибка при загрузке HTML из файла'
-            else:
-                return False, 'Страница не найдена'
+                return False, 'Ошибка при загрузке HTML из файла'
+            return False, 'Страница не найдена'
         except Exception as e:
             return False, str(e)
 
@@ -90,8 +91,7 @@ class ArchiveService:
         if page:
             domain_info = cls.model_domain_info.query.filter_by(archived_page_id=page_id).first()
             return True, domain_info
-        else:
-            return False, 'Информация о домене не найдена'
+        return False, 'Информация о домене не найдена'
 
     @staticmethod
     def _fetch_html(url):
@@ -107,23 +107,23 @@ class ArchiveService:
         try:
             soup = BeautifulSoup(html_code, 'html.parser')
             html_processor = HTMLProcessor(soup, url)
-            html_processor.process_css()
-            html_processor.process_images()
-            html_processor.process_scripts()
-            html_processor.process_inline_styles()
-            html_processor.process_icons()
-            result = html_processor.process_and_save_html()
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            result = loop.run_until_complete(html_processor.process_all())
             return result
         except Exception as e:
             raise Exception(f'Ошибка обработки HTML: {str(e)}')
 
     @staticmethod
     def _save_domain_info(url, page_id):
-        domain_service = DomainService(url)
-        domain_info_data = domain_service.get_domain_info()
-        domain_info_data["archived_page_id"] = page_id
-        result = ArchiveService.create_domain_info(domain_info_data)
-        return result
+        try:
+            domain_service = DomainService(url)
+            domain_info_data = domain_service.get_domain_info()
+            domain_info_data["archived_page_id"] = page_id
+            result = ArchiveService.create_domain_info(domain_info_data)
+            return result
+        except Exception as e:
+            raise Exception(f'Ошибка сохранения информации о домене: {str(e)}')
 
     @staticmethod
     def _save_archived_page(url, html_path, user_id):

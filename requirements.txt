@@ -12,3 +12,4 @@ marshmallow~=3.21.2
 pytz~=2024.1
 cryptography~=42.0.8
 flask-migrate~=4.0.7
+aiohttp~=3.9.5

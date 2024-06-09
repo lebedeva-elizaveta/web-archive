@@ -10,7 +10,7 @@
     <ul>
         <li><strong>Domain:</strong> {{ domain_info.domain }}</li>
         <li><strong>IP Address:</strong> {{ domain_info.ip_address }}</li>
-        <li><strong>Whois Protocol:</strong> {{ domain_info.whois_protocol }}</li>
+        <li><strong>Whois Protocol:</strong> {{ domain_info.whois_protocol | replace('\n', '<br>') | safe }}</li>
         <li><strong>Network Info:</strong> {{ domain_info.network_info }}</li>
     </ul>
 </body>
