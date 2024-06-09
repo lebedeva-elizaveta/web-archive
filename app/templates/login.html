@@ -91,7 +91,7 @@
         {% endif %}
     {% endwith %}
 
-    <form method="POST" action="/login">
+    <form id="loginForm">
         <label for="emailInput">Email:</label>
         <input type="text" id="emailInput" name="email" required>
         <br><br>
@@ -156,6 +156,15 @@
             flashMessage.remove();
         }, 3000);
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(function(message) {
+            setTimeout(function() {
+                message.remove();
+            }, 3000);
+        });
+    });
 </script>
 
 </body>

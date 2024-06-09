@@ -125,10 +125,8 @@
 
     <button type="button" onclick="showPage()">Показать сохранённую страницу</button>
 
-    <!-- Добавленная кнопка для отображения информации о домене -->
     <button type="button" id="domainInfoButton" onclick="toggleDomainInfo()">Показать информацию о домене</button>
     <button type="button" id="logoutButton" onclick="logout()">Выйти</button>
-    <!-- Добавленный div для отображения информации о домене -->
     <div id="displayArea"></div>
 
 </div>
@@ -235,6 +233,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         var displayArea = document.getElementById('displayArea');
         displayArea.style.display = 'none';
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach(function(message) {
+            setTimeout(function() {
+                message.remove();
+            }, 3000);
+        });
     });
 </script>
 </body>

@@ -104,15 +104,5 @@
     <p>Уже есть аккаунт? <a href="{{ url_for('login') }}">Войдите</a></p>
 </div>
 
-<!-- Скрипт для автоматического перенаправления -->
-<script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const success = urlParams.get('success');
-
-    if (success === 'true') {
-        window.location.href = '{{ url_for('login') }}';
-    }
-</script>
-
 </body>
 </html>
