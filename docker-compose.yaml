@@ -4,7 +4,7 @@ services:
   backend:
     build: .
     ports:
-      - "5000:5000"
+      - "8000:5000"
     volumes:
       - ./uploads/files:/app/uploads/files
       - /var/tmp:/var/tmp
@@ -12,8 +12,10 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - SECRET_KEY=${SECRET_KEY}
       - FLASK_APP=run.py
+      - IS_DOCKER=true
     depends_on:
       - db
+      - selenium
 #    restart: always
 
   db:
@@ -48,6 +50,14 @@ services:
     depends_on:
       - db
 
+  selenium:
+    image: selenium/standalone-chrome:dev
+    platform: linux/amd64
+    ports:
+      - "4444:4444"
+    environment:
+      - SE_NODE_MAX_INSTANCES=1
+      - SE_NODE_MAX_SESSION=1
 
 volumes:
   postgres_data:

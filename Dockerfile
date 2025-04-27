@@ -1,4 +1,4 @@
-FROM python:3.11.1-slim
+FROM python:3.13.3-slim
 
 # set work directory
 WORKDIR .
@@ -22,4 +22,4 @@ COPY . .
 # Set the environment variable for Gunicorn temporary files
 ENV TMPDIR=/var/tmp
 
-CMD ["flask", "run", "--host=0.0.0.0"]
+CMD flask db upgrade && flask run --host=0.0.0.0

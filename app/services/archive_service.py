@@ -1,6 +1,5 @@
 import asyncio
 import os
-import requests
 from bs4 import BeautifulSoup
 from marshmallow import ValidationError
 
@@ -8,6 +7,7 @@ from app.models import DomainInfo, ArchivedPage, db
 from .file_service import FileService
 from .html_service import HTMLProcessor
 from .domain_service import DomainService
+from .web_service import authorize_and_get_cookies, fetch_html, get_cookies
 from ..schemas import ArchivedPageSchema, DomainInfoSchema
 
 
@@ -38,8 +38,14 @@ class ArchiveService:
             raise
 
     @staticmethod
-    def add_archive_page(url, user_id):
-        html_code = ArchiveService._fetch_html(url)
+    def add_archive_page(url, user_id, protected=False):
+        cookies = None
+        if protected:
+            cookies = get_cookies(url)
+            if not cookies:
+                cookies = authorize_and_get_cookies(url)
+
+        html_code = fetch_html(url, cookies)
         if not html_code:
             return False, 'Ошибка получения HTML'
 
@@ -47,7 +53,7 @@ class ArchiveService:
         if not processed_html:
             return False, 'Ошибка обработки HTML'
 
-        new_page = ArchiveService._save_archived_page(url, processed_html, user_id)
+        new_page = ArchiveService._save_archived_page(url, processed_html, user_id, protected)
         domain_info = ArchiveService._save_domain_info(url, new_page.id)
         if not domain_info:
             return False, 'Ошибка сохранения информации о домене'
@@ -94,15 +100,6 @@ class ArchiveService:
         return False, 'Информация о домене не найдена'
 
     @staticmethod
-    def _fetch_html(url):
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return response.text
-        except requests.RequestException as e:
-            raise Exception(f'Ошибка получения HTML: {str(e)}')
-
-    @staticmethod
     def _process_html(html_code, url):
         try:
             soup = BeautifulSoup(html_code, 'html.parser')
@@ -126,11 +123,12 @@ class ArchiveService:
             raise Exception(f'Ошибка сохранения информации о домене: {str(e)}')
 
     @staticmethod
-    def _save_archived_page(url, html_path, user_id):
+    def _save_archived_page(url, html_path, user_id, protected):
         data = {
             "url": url,
             "html": html_path,
-            "user_id": user_id
+            "user_id": user_id,
+            "protected": protected
         }
         result = ArchiveService.create_page(data)
         return result

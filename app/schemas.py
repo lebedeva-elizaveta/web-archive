@@ -7,6 +7,7 @@ class ArchivedPageSchema(Schema):
     html = fields.Str(required=True)
     timestamp = fields.DateTime(dump_only=True)
     user_id = fields.Int(required=True)
+    protected = fields.Bool(required=True)
 
 
 class DomainInfoSchema(Schema):

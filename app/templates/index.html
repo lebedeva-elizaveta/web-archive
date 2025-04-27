@@ -6,34 +6,122 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Архиватор страниц</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 <div class="container">
     <h1>Архиватор страниц</h1>
 
-    <!-- Флеш-сообщения -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="flash-message {{ category }}">{{ message }}</div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <form id="addForm">
         <label for="urlInput">Введите URL:</label>
         <input type="text" id="urlInput" name="urlInput" required>
+
         <button type="button" onclick="addPage()">Добавить</button>
+
+        <!-- Чекбокс ниже кнопки -->
+        <div class="checkbox-container" style="margin-top: 10px;">
+            <input type="checkbox" id="protectedPageCheckbox" name="protectedPage">
+            <label for="protectedPageCheckbox">Это защищённая страница?</label>
+        </div>
     </form>
 
     <button type="button" onclick="showPage()">Показать сохранённую страницу</button>
 
     <button type="button" id="domainInfoButton" onclick="toggleDomainInfo()">Показать информацию о домене</button>
     <button type="button" id="logoutButton" onclick="logout()">Выйти</button>
+
     <div id="displayArea"></div>
 
 </div>
 
 <script src="{{ url_for('static', filename='index.js') }}"></script>
+<script>
+    function addPage() {
+        const urlInput = document.getElementById("urlInput").value;
+        const isProtected = document.getElementById("protectedPageCheckbox").checked;
+
+        // Создаём объект с данными для отправки
+        const data = {
+            url: urlInput,
+            protected: isProtected
+        };
+
+        // Отправляем данные на сервер через fetch
+        fetch("/archive", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data) // Отправляем данные в формате JSON
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Используем SweetAlert2 для красивого уведомления
+                Swal.fire({
+                    title: 'Успех!',
+                    text: 'Страница добавлена!',
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                });
+            } else {
+                // Используем SweetAlert2 для уведомления об ошибке
+                Swal.fire({
+                    title: 'Ошибка!',
+                    text: 'Ошибка при добавлении страницы.',
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        })
+        .catch(error => {
+            console.error("Ошибка:", error);
+            // Если ошибка при запросе, показываем ошибку
+            Swal.fire({
+                title: 'Ошибка!',
+                text: 'Что-то пошло не так!',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    }
+</script>
+
+<script>
+    function logout() {
+        // Отправляем запрос на сервер для выхода
+        fetch('/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Показываем уведомление с помощью SweetAlert2
+                Swal.fire({
+                    title: 'Выход',
+                    text: data.message,  // Текст сообщения, который возвращает сервер
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    // После того как пользователь закроет уведомление, редиректим на страницу входа
+                    window.location.href = '/login';  // Перенаправляем на страницу входа
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
+            Swal.fire({
+                title: 'Ошибка!',
+                text: 'Произошла ошибка при выходе.',
+                icon: 'error',
+                confirmButtonText: 'OK'
+            });
+        });
+    }
+</script>
+
 </body>
 </html>

@@ -33,16 +33,26 @@ class DomainService:
 
     @staticmethod
     def _format_whois(whois_data):
+        def format_date(date):
+            if isinstance(date, list):
+                date = date[0] if date else None
+            return date.strftime('%Y.%m.%d') if date else ''
+
+        def format_field(field):
+            if isinstance(field, list):
+                return ', '.join(field)
+            return field if field else ''
+
         whois_lines = [
             f"domain: {whois_data.domain}",
             f"nserver: {' '.join(whois_data.name_servers)}",
-            f"state: {whois_data.status}",
-            f"admin-contact: {whois_data.emails if whois_data.emails else ''}",
-            f"org: {whois_data.org}",
-            f"registrar: {whois_data.registrar}",
-            f"created: {whois_data.creation_date.strftime('%Y.%m.%d') if whois_data.creation_date else ''}",
-            f"paid-till: {whois_data.expiration_date.strftime('%Y.%m.%d') if whois_data.expiration_date else ''}",
-            f"source: {whois_data.source if hasattr(whois_data, 'source') else 'Unknown'}",
+            f"state: {format_field(whois_data.status)}",
+            f"admin-contact: {format_field(whois_data.emails)}",
+            f"org: {format_field(whois_data.org)}",
+            f"registrar: {format_field(whois_data.registrar)}",
+            f"created: {format_date(whois_data.creation_date)}",
+            f"paid-till: {format_date(whois_data.expiration_date)}",
+            f"source: {getattr(whois_data, 'source', 'Unknown')}",
         ]
         return '\n'.join(whois_lines)
 

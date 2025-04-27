@@ -1,4 +1,4 @@
-import imghdr
+import filetype
 import re
 import base64
 import asyncio
@@ -96,9 +96,10 @@ class HTMLProcessor:
         src = self._normalize_url(src)
         img_content = await self._fetch_url_content(src)
         if img_content:
-            img_data_base64 = self._base64_encode(img_content)
-            img_format = imghdr.what(None, h=img_content)
-            if img_format:
+            kind = filetype.guess(img_content)
+            if kind and kind.mime.startswith('image/'):
+                img_data_base64 = self._base64_encode(img_content)
+                img_format = kind.extension
                 img_tag['src'] = f'data:image/{img_format};base64,{img_data_base64}'
 
     async def _process_inline_style(self, div_tag):
@@ -120,8 +121,9 @@ class HTMLProcessor:
         return None
 
     def _update_div_tag_with_base64_image(self, div_tag, style_value, img_content):
-        img_format = imghdr.what(None, h=img_content)
-        if img_format:
+        kind = filetype.guess(img_content)
+        if kind and kind.mime.startswith('image/'):
+            img_format = kind.extension
             img_data_base64 = self._base64_encode(img_content)
             start_index = style_value.find('background-image:url(') + len('background-image:url(')
             end_index = style_value.find(')', start_index)

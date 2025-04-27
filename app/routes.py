@@ -23,40 +23,44 @@ def home():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.json['email']
+        password = request.json['password']
         try:
             if UserService.if_exist(email):
                 raise UserAlreadyExistsException()
             user_service_ex.create_user(email, password)
-            flash('Регистрация успешна! Теперь вы можете войти', 'success')
-            return redirect(url_for('login'))
+            return jsonify({"success": True, "message": "Регистрация успешна! Теперь вы можете войти."}), 200
         except UserAlreadyExistsException:
-            flash('Пользователь с таким email уже зарегистрирован', 'error')
+            return jsonify({"success": False, "message": "Пользователь с таким email уже зарегистрирован."}), 400
     return render_template('register.html')
+
 
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        email = request.form['email']
-        password = request.form['password']
+        email = request.json['email']
+        password = request.json['password']
         result, user_id = user_service_ex.login_user(email, password)
         if result:
             session['user_id'] = user_id
             session['logged_in'] = True
-            flash('Вы вошли успешно!', 'success')
-            return redirect(url_for('home'))
+            return jsonify({"success": True, "message": "Вы вошли успешно!"}), 200
         else:
-            flash('Неправильный email или пароль', 'error')
+            return jsonify({"success": False, "message": "Неправильный email или пароль"}), 401
+
     return render_template('login.html')
+
 
 
 @app.route('/logout', methods=['POST'])
 def logout():
     session.pop('logged_in', None)
+    session.pop('user_id', None)
+    session.pop('vk_cookies', None)
+    session.pop('moodle_cookies', None)
+    session.pop('brs_cookies', None)
     session.pop('_flashes', None)
-    flash('Вы вышли из системы', 'success')
     return jsonify({'success': True, 'message': 'Вы вышли из системы'})
 
 
@@ -64,14 +68,15 @@ def logout():
 def archive_page():
     data = request.json
     url = data.get('url')
+    is_protected = data.get('protected', False)
     user_id = session.get('user_id')
     try:
-        ArchivedPageSchema().load({'url': url, 'html': '<dummy>', 'user_id': user_id})
+        ArchivedPageSchema().load({'url': url, 'html': '<dummy>', 'user_id': user_id, 'protected': is_protected})
     except ValidationError:
         message = 'Некорректный URL'
         flash(message, 'error')
         return jsonify({'success': False, 'error': message}), 400
-    success, message = ArchiveService.add_archive_page(url, user_id)
+    success, message = ArchiveService.add_archive_page(url, user_id, is_protected)
     if success:
         flash(message, 'success')
         return jsonify({'success': True, 'message': message}), 200
