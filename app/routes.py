@@ -2,7 +2,6 @@ import os
 from flask import render_template, request, redirect, send_from_directory, render_template_string, url_for, \
     session, flash, jsonify
 from marshmallow import ValidationError
-
 from app.exceptions import UserAlreadyExistsException
 from app.main import app
 from app.models import db
@@ -57,7 +56,6 @@ def login():
 def logout():
     session.pop('logged_in', None)
     session.pop('user_id', None)
-    session.pop('vk_cookies', None)
     session.pop('moodle_cookies', None)
     session.pop('brs_cookies', None)
     session.pop('_flashes', None)
@@ -70,13 +68,14 @@ def archive_page():
     url = data.get('url')
     is_protected = data.get('protected', False)
     user_id = session.get('user_id')
+    credentials = data.get('credentials')
     try:
         ArchivedPageSchema().load({'url': url, 'html': '<dummy>', 'user_id': user_id, 'protected': is_protected})
     except ValidationError:
         message = 'Некорректный URL'
         flash(message, 'error')
         return jsonify({'success': False, 'error': message}), 400
-    success, message = ArchiveService.add_archive_page(url, user_id, is_protected)
+    success, message = ArchiveService.add_archive_page(url, user_id, is_protected, credentials)
     if success:
         flash(message, 'success')
         return jsonify({'success': True, 'message': message}), 200
@@ -132,3 +131,18 @@ def get_domain_info(page_id):
 @app.route('/uploads/files/<filename>')
 def download_file(filename):
     return send_from_directory(os.path.join(app.root_path, 'app', 'uploads', 'files'), filename)
+
+
+@app.route('/auth/check', methods=['GET'])
+def check_auth_required():
+    auth_type = request.args.get('type')
+
+    if auth_type == 'brs':
+        cookies = session.get('brs_cookies')
+    elif auth_type == 'moodle':
+        cookies = session.get('moodle_cookies')
+    else:
+        return jsonify({'need_auth': True})  # на всякий случай
+    need_auth = not bool(cookies)
+    return jsonify({'need_auth': need_auth})
+

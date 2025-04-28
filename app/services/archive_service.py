@@ -7,7 +7,7 @@ from app.models import DomainInfo, ArchivedPage, db
 from .file_service import FileService
 from .html_service import HTMLProcessor
 from .domain_service import DomainService
-from .web_service import authorize_and_get_cookies, fetch_html, get_cookies
+from .web_service import authorize_and_fetch_html
 from ..schemas import ArchivedPageSchema, DomainInfoSchema
 
 
@@ -38,14 +38,8 @@ class ArchiveService:
             raise
 
     @staticmethod
-    def add_archive_page(url, user_id, protected=False):
-        cookies = None
-        if protected:
-            cookies = get_cookies(url)
-            if not cookies:
-                cookies = authorize_and_get_cookies(url)
-
-        html_code = fetch_html(url, cookies)
+    def add_archive_page(url, user_id, protected=False, credentials=None):
+        html_code = authorize_and_fetch_html(url, protected, credentials)
         if not html_code:
             return False, 'Ошибка получения HTML'
 

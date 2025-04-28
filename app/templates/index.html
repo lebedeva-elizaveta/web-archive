@@ -36,55 +36,181 @@
 
 <script src="{{ url_for('static', filename='index.js') }}"></script>
 <script>
-    function addPage() {
-        const urlInput = document.getElementById("urlInput").value;
-        const isProtected = document.getElementById("protectedPageCheckbox").checked;
+async function addPage() {
+    const urlInput = document.getElementById("urlInput").value.trim();
+    const isProtected = document.getElementById("protectedPageCheckbox").checked;
 
-        // Создаём объект с данными для отправки
-        const data = {
-            url: urlInput,
-            protected: isProtected
-        };
+    if (!urlInput) {
+        Swal.fire('Ошибка!', 'Введите URL.', 'error');
+        return;
+    }
 
-        // Отправляем данные на сервер через fetch
-        fetch("/archive", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(data) // Отправляем данные в формате JSON
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Используем SweetAlert2 для красивого уведомления
-                Swal.fire({
-                    title: 'Успех!',
-                    text: 'Страница добавлена!',
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                });
-            } else {
-                // Используем SweetAlert2 для уведомления об ошибке
-                Swal.fire({
-                    title: 'Ошибка!',
-                    text: 'Ошибка при добавлении страницы.',
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
+    let needAuthWindow = false;
+    let unsupportedSite = false;
+
+    // Проверка на неподдерживаемые сайты до того, как показывать прелоадер
+    if (!urlInput.includes("cs") && !urlInput.includes("edu") && !urlInput.includes("vk")) {
+        if (isProtected) {
+            unsupportedSite = true;
+        }
+    }
+
+    if (unsupportedSite) {
+        Swal.fire('Ошибка!', 'Пока поддерживаются только ВК, БРС и Moodle.', 'error');
+        return;
+    }
+
+    try {
+        if (urlInput.includes("cs") || urlInput.includes("edu")) {
+            // Только если это не ВК, показываем прелоадер
+            Swal.fire({
+                title: 'Проверка авторизации...',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+
+            if (urlInput.includes("cs")) {
+                const response = await fetch('/auth/check?type=brs');
+                const authData = await response.json();
+                if (authData.need_auth) {
+                    needAuthWindow = true;
+                }
+            } else if (urlInput.includes("edu")) {
+                const response = await fetch('/auth/check?type=moodle');
+                const authData = await response.json();
+                if (authData.need_auth) {
+                    needAuthWindow = true;
+                }
             }
+
+            Swal.close();  // Закрываем прелоадер после проверки
+        } else if (urlInput.includes("vk")) {
+            needAuthWindow = true;  // Для VK сразу нужна авторизация, без прелоадера
+        }
+    } catch (error) {
+        console.error("Ошибка при проверке авторизации:", error);
+        Swal.close(); // Закрыть прелоадер перед показом ошибки
+        Swal.fire('Ошибка!', 'Ошибка при проверке авторизации.', 'error');
+        return;
+    }
+
+    if (needAuthWindow) {
+        Swal.fire({
+            title: 'Введите данные для авторизации',
+            html:
+                '<input id="swal-login" class="swal2-input" placeholder="Логин">' +
+                '<input id="swal-password" type="password" class="swal2-input" placeholder="Пароль">' +
+                '<input id="swal-code" class="swal2-input" placeholder="Код (если ВК)">',
+            confirmButtonText: 'Отправить',
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    login: document.getElementById('swal-login').value,
+                    password: document.getElementById('swal-password').value,
+                    code: document.getElementById('swal-code').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const credentials = result.value;
+                sendAddPageRequest(urlInput, isProtected, credentials);
+            }
+        });
+    } else {
+        sendAddPageRequest(urlInput, isProtected);
+    }
+}
+
+function sendAddPageRequest(urlInput, isProtected, credentials = null) {
+    const data = {
+        url: urlInput,
+        protected: isProtected,
+        credentials: credentials
+    };
+
+    // Показать прелоадер перед отправкой
+    Swal.fire({
+        title: 'Сохраняем страницу...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch("/archive", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close(); // Закрыть прелоадер
+
+        if (data.success) {
+            Swal.fire('Успех!', 'Страница добавлена!', 'success');
+        } else {
+            Swal.fire('Ошибка!', data.error || 'Ошибка при добавлении страницы.', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.close(); // Закрыть прелоадер даже в случае ошибки
+
+        console.error("Ошибка:", error);
+        Swal.fire('Ошибка!', 'Что-то пошло не так!', 'error');
+    });
+}
+
+
+function toggleDomainInfo() {
+    const domainInfoButton = document.getElementById("domainInfoButton");
+    const displayArea = document.getElementById("displayArea");
+    const urlInput = document.getElementById("urlInput").value.trim();
+
+    if (!urlInput) {
+        Swal.fire('Ошибка!', 'Введите URL для получения информации о домене.', 'error');
+        return;
+    }
+
+    // Если информация уже отображается, скрываем её
+    if (displayArea.style.display === 'block') {
+        displayArea.style.display = 'none';
+        domainInfoButton.innerText = 'Показать информацию о домене';
+        return;
+    }
+
+    // Показать прелоадер
+    Swal.fire({
+        title: 'Загружаем информацию о домене...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    fetch(`/view_domain_info/${encodeURIComponent(urlInput)}`)
+        .then(response => response.text()) // Получаем HTML в виде строки
+        .then(data => {
+            // Закрыть прелоадер
+            Swal.close();
+
+            // Вставить полученный HTML в displayArea
+            displayArea.innerHTML = data;
+
+            // Развернуть блок и изменить текст кнопки
+            displayArea.style.display = 'block';  // Показываем блок
+            domainInfoButton.innerText = 'Скрыть информацию о домене';  // Меняем текст на кнопке
         })
         .catch(error => {
-            console.error("Ошибка:", error);
-            // Если ошибка при запросе, показываем ошибку
-            Swal.fire({
-                title: 'Ошибка!',
-                text: 'Что-то пошло не так!',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
+            Swal.close(); // Закрыть прелоадер в случае ошибки
+            console.error("Ошибка при загрузке информации о домене:", error);
+            Swal.fire('Ошибка!', 'Не удалось загрузить информацию о домене.', 'error');
         });
-    }
+}
+
 </script>
 
 <script>
