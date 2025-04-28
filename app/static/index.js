@@ -1,21 +1,180 @@
-function addPage() {
-    var urlInput = document.getElementById('urlInput').value;
-    fetch('/archive', {
+async function addPage() {
+    const urlInput = document.getElementById("urlInput").value.trim();
+    const isProtected = document.getElementById("protectedPageCheckbox").checked;
+
+    if (!urlInput) {
+        Swal.fire('Ошибка!', 'Введите URL.', 'error');
+        return;
+    }
+
+    let needAuthWindow = false;
+    let unsupportedSite = false;
+
+    if (!urlInput.includes("cs") && !urlInput.includes("edu") && !urlInput.includes("vk")) {
+        if (isProtected) {
+            unsupportedSite = true;
+        }
+    }
+
+    if (unsupportedSite) {
+        Swal.fire('Ошибка!', 'Пока поддерживаются только ВК, БРС и Moodle.', 'error');
+        return;
+    }
+
+    try {
+        if (urlInput.includes("cs") || urlInput.includes("edu")) {
+            Swal.fire({
+                title: 'Проверка авторизации...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            if (urlInput.includes("cs")) {
+                const response = await fetch('/auth/check?type=brs');
+                const authData = await response.json();
+                if (authData.need_auth) {
+                    needAuthWindow = true;
+                }
+            } else if (urlInput.includes("edu")) {
+                const response = await fetch('/auth/check?type=moodle');
+                const authData = await response.json();
+                if (authData.need_auth) {
+                    needAuthWindow = true;
+                }
+            }
+
+            Swal.close();
+        } else if (urlInput.includes("vk")) {
+            needAuthWindow = true;
+        }
+    } catch (error) {
+        console.error("Ошибка при проверке авторизации:", error);
+        Swal.close();
+        Swal.fire('Ошибка!', 'Ошибка при проверке авторизации.', 'error');
+        return;
+    }
+
+    if (needAuthWindow) {
+        Swal.fire({
+            title: 'Введите данные для авторизации',
+            html:
+                '<input id="swal-login" class="swal2-input" placeholder="Логин">' +
+                '<input id="swal-password" type="password" class="swal2-input" placeholder="Пароль">' +
+                '<input id="swal-code" class="swal2-input" placeholder="Код (если ВК)">',
+            confirmButtonText: 'Отправить',
+            focusConfirm: false,
+            preConfirm: () => {
+                return {
+                    login: document.getElementById('swal-login').value,
+                    password: document.getElementById('swal-password').value,
+                    code: document.getElementById('swal-code').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const credentials = result.value;
+                sendAddPageRequest(urlInput, isProtected, credentials);
+            }
+        });
+    } else {
+        sendAddPageRequest(urlInput, isProtected);
+    }
+}
+
+function sendAddPageRequest(urlInput, isProtected, credentials = null) {
+    const data = { url: urlInput, protected: isProtected, credentials: credentials };
+
+    Swal.fire({
+        title: 'Сохраняем страницу...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    fetch("/archive", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        Swal.close();
+        if (data.success) {
+            Swal.fire('Успех!', 'Страница добавлена!', 'success');
+        } else {
+            Swal.fire('Ошибка!', data.error || 'Ошибка при добавлении страницы.', 'error');
+        }
+    })
+    .catch(error => {
+        Swal.close();
+        console.error("Ошибка:", error);
+        Swal.fire('Ошибка!', 'Что-то пошло не так!', 'error');
+    });
+}
+
+function toggleDomainInfo() {
+    const domainInfoButton = document.getElementById("domainInfoButton");
+    const displayArea = document.getElementById("displayArea");
+    const urlInput = document.getElementById("urlInput").value.trim();
+
+    if (!urlInput) {
+        Swal.fire('Ошибка!', 'Введите URL для получения информации о домене.', 'error');
+        return;
+    }
+
+    if (displayArea.style.display === 'block') {
+        displayArea.style.display = 'none';
+        domainInfoButton.innerText = 'Показать информацию о домене';
+        return;
+    }
+
+    Swal.fire({
+        title: 'Загружаем информацию о домене...',
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    fetch(`/view_domain_info/${encodeURIComponent(urlInput)}`)
+        .then(response => response.text())
+        .then(data => {
+            Swal.close();
+            displayArea.innerHTML = data;
+            displayArea.style.display = 'block';
+            domainInfoButton.innerText = 'Скрыть информацию о домене';
+        })
+        .catch(error => {
+            Swal.close();
+            console.error("Ошибка при загрузке информации о домене:", error);
+            Swal.fire('Ошибка!', 'Не удалось загрузить информацию о домене.', 'error');
+        });
+}
+
+function logout() {
+    fetch('/logout', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: urlInput }),
+        headers: { 'Content-Type': 'application/json' }
     })
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showSuccessMessage(data.message);
-        } else {
-            showErrorMessage(data.error);
+            Swal.fire({
+                title: 'Выход',
+                text: data.message,
+                icon: 'success',
+                confirmButtonText: 'OK'
+            }).then(() => {
+                window.location.href = '/login';
+            });
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Ошибка:', error);
+        Swal.fire({
+            title: 'Ошибка!',
+            text: 'Произошла ошибка при выходе.',
+            icon: 'error',
+            confirmButtonText: 'OK'
+        });
+    });
 }
 
 function showPage() {
@@ -28,84 +187,3 @@ function showPage() {
     var encodedUrl = encodeURIComponent(urlInput);
     window.location.href = '/view/' + encodedUrl;
 }
-
-function showDomainInfo() {
-    var urlInput = document.getElementById('urlInput').value;
-    if (!urlInput) {
-        showErrorMessage('Введите URL');
-        return;
-    }
-    fetch('/view_domain_info/' + encodeURIComponent(urlInput))
-        .then(response => response.text())
-        .then(html => {
-            document.getElementById('displayArea').innerHTML = html;
-        })
-        .catch(error => console.error('Error:', error));
-}
-
-function toggleDomainInfo() {
-    var displayArea = document.getElementById('displayArea');
-    var domainInfoButton = document.getElementById('domainInfoButton');
-    var urlInput = document.getElementById('urlInput').value;
-    if (!urlInput) {
-        showErrorMessage('Введите URL');
-        return;
-    }
-    if (displayArea.style.display === 'none') {
-        displayArea.style.display = 'block';
-        domainInfoButton.textContent = 'Скрыть информацию о домене';
-        showDomainInfo();
-    } else {
-        displayArea.style.display = 'none';
-        domainInfoButton.textContent = 'Показать информацию о домене';
-    }
-}
-
-function logout() {
-    fetch('/logout', {
-        method: 'POST',
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            window.location.href = '/login';
-        } else {
-            showErrorMessage(data.error);
-        }
-    })
-    .catch(error => console.error('Error:', error));
-}
-
-function showSuccessMessage(message) {
-    var flashMessage = document.createElement('div');
-    flashMessage.classList.add('flash-message', 'success');
-    flashMessage.textContent = message;
-    document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
-    setTimeout(function() {
-        flashMessage.remove();
-    }, 3000);
-}
-
-function showErrorMessage(message) {
-    var flashMessage = document.createElement('div');
-    flashMessage.classList.add('flash-message', 'error');
-    flashMessage.textContent = message;
-    document.querySelector('.container').insertBefore(flashMessage, document.querySelector('form'));
-    setTimeout(function() {
-        flashMessage.remove();
-    }, 3000);
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    var displayArea = document.getElementById('displayArea');
-    displayArea.style.display = 'none';
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    var flashMessages = document.querySelectorAll('.flash-message');
-    flashMessages.forEach(function(message) {
-        setTimeout(function() {
-            message.remove();
-        }, 3000);
-    });
-});
