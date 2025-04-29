@@ -10,10 +10,12 @@ async function addPage() {
     let needAuthWindow = false;
     let unsupportedSite = false;
 
-    if (!urlInput.includes("cs") && !urlInput.includes("edu") && !urlInput.includes("vk")) {
-        if (isProtected) {
-            unsupportedSite = true;
-        }
+    const isBRS = urlInput.includes("cs");
+    const isMoodle = urlInput.includes("edu");
+    const isVK = urlInput.includes("vk");
+
+    if (!isBRS && !isMoodle && !isVK && isProtected) {
+        unsupportedSite = true;
     }
 
     if (unsupportedSite) {
@@ -22,30 +24,28 @@ async function addPage() {
     }
 
     try {
-        if (urlInput.includes("cs") || urlInput.includes("edu")) {
-            Swal.fire({
-                title: 'Проверка авторизации...',
-                allowOutsideClick: false,
-                didOpen: () => Swal.showLoading()
-            });
+        if (isProtected) {
+            if (isBRS || isMoodle) {
+                Swal.fire({
+                    title: 'Проверка авторизации...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
 
-            if (urlInput.includes("cs")) {
-                const response = await fetch('/auth/check?type=brs');
-                const authData = await response.json();
-                if (authData.need_auth) {
-                    needAuthWindow = true;
+                if (isBRS) {
+                    const response = await fetch('/auth/check?type=brs');
+                    const authData = await response.json();
+                    if (authData.need_auth) needAuthWindow = true;
+                } else if (isMoodle) {
+                    const response = await fetch('/auth/check?type=moodle');
+                    const authData = await response.json();
+                    if (authData.need_auth) needAuthWindow = true;
                 }
-            } else if (urlInput.includes("edu")) {
-                const response = await fetch('/auth/check?type=moodle');
-                const authData = await response.json();
-                if (authData.need_auth) {
-                    needAuthWindow = true;
-                }
+
+                Swal.close();
+            } else if (isVK) {
+                needAuthWindow = true;
             }
-
-            Swal.close();
-        } else if (urlInput.includes("vk")) {
-            needAuthWindow = true;
         }
     } catch (error) {
         console.error("Ошибка при проверке авторизации:", error);
@@ -57,10 +57,11 @@ async function addPage() {
     if (needAuthWindow) {
         Swal.fire({
             title: 'Введите данные для авторизации',
-            html:
-                '<input id="swal-login" class="swal2-input" placeholder="Логин">' +
-                '<input id="swal-password" type="password" class="swal2-input" placeholder="Пароль">' +
-                '<input id="swal-code" class="swal2-input" placeholder="Код (если ВК)">',
+            html: `
+                <input id="swal-login" class="swal2-input" placeholder="Логин">
+                <input id="swal-password" type="password" class="swal2-input" placeholder="Пароль">
+                <input id="swal-code" class="swal2-input" placeholder="Код (если ВК)">
+            `,
             confirmButtonText: 'Отправить',
             focusConfirm: false,
             preConfirm: () => {
@@ -68,7 +69,7 @@ async function addPage() {
                     login: document.getElementById('swal-login').value,
                     password: document.getElementById('swal-password').value,
                     code: document.getElementById('swal-code').value
-                }
+                };
             }
         }).then((result) => {
             if (result.isConfirmed) {
@@ -82,7 +83,11 @@ async function addPage() {
 }
 
 function sendAddPageRequest(urlInput, isProtected, credentials = null) {
-    const data = { url: urlInput, protected: isProtected, credentials: credentials };
+    const data = {
+        url: urlInput,
+        protected: isProtected,
+        credentials: credentials
+    };
 
     Swal.fire({
         title: 'Сохраняем страницу...',
@@ -95,20 +100,20 @@ function sendAddPageRequest(urlInput, isProtected, credentials = null) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
     })
-    .then(response => response.json())
-    .then(data => {
-        Swal.close();
-        if (data.success) {
-            Swal.fire('Успех!', 'Страница добавлена!', 'success');
-        } else {
-            Swal.fire('Ошибка!', data.error || 'Ошибка при добавлении страницы.', 'error');
-        }
-    })
-    .catch(error => {
-        Swal.close();
-        console.error("Ошибка:", error);
-        Swal.fire('Ошибка!', 'Что-то пошло не так!', 'error');
-    });
+        .then(response => response.json())
+        .then(data => {
+            Swal.close();
+            if (data.success) {
+                Swal.fire('Успех!', 'Страница добавлена!', 'success');
+            } else {
+                Swal.fire('Ошибка!', data.error || 'Ошибка при добавлении страницы.', 'error');
+            }
+        })
+        .catch(error => {
+            Swal.close();
+            console.error("Ошибка:", error);
+            Swal.fire('Ошибка!', 'Что-то пошло не так!', 'error');
+        });
 }
 
 function toggleDomainInfo() {
@@ -153,37 +158,36 @@ function logout() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                Swal.fire({
+                    title: 'Выход',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonText: 'OK'
+                }).then(() => {
+                    window.location.href = '/login';
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Ошибка:', error);
             Swal.fire({
-                title: 'Выход',
-                text: data.message,
-                icon: 'success',
+                title: 'Ошибка!',
+                text: 'Произошла ошибка при выходе.',
+                icon: 'error',
                 confirmButtonText: 'OK'
-            }).then(() => {
-                window.location.href = '/login';
             });
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-        Swal.fire({
-            title: 'Ошибка!',
-            text: 'Произошла ошибка при выходе.',
-            icon: 'error',
-            confirmButtonText: 'OK'
         });
-    });
 }
 
 function showPage() {
-    var urlInput = document.getElementById('urlInput').value;
+    const urlInput = document.getElementById('urlInput').value;
     if (!urlInput) {
-        showErrorMessage('Введите URL');
+        Swal.fire('Ошибка!', 'Введите URL.', 'error');
         return;
     }
-
-    var encodedUrl = encodeURIComponent(urlInput);
-    window.location.href = '/view/' + encodedUrl;
+    const encodedUrl = encodeURIComponent(urlInput);
+    window.location.href = `/view/${encodedUrl}`;
 }

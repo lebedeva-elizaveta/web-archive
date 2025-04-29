@@ -5,72 +5,25 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Вход</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
-<div class="container">
-    <h1>Вход</h1>
-
-    <form method="POST" action="/login" id="loginForm">
-        <label for="emailInput">Email:</label>
-        <input type="text" id="emailInput" name="email" required>
-        <br><br>
-        <label for="passwordInput">Пароль:</label>
-        <input type="password" id="passwordInput" name="password" required>
-        <br><br>
-        <button type="submit">Войти</button>
-    </form>
-
-    <p>Еще нет аккаунта? <a href="/register">Зарегистрируйтесь</a></p>
-</div>
-
-<script>
-    document.getElementById("loginForm").addEventListener("submit", function(event) {
-        event.preventDefault(); // Отменяем стандартную отправку формы для обработки через JavaScript
-
-        const email = document.getElementById("emailInput").value;
-        const password = document.getElementById("passwordInput").value;
-
-        // Отправляем данные на сервер через fetch
-        fetch("/login", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password })  // Отправляем данные в формате JSON
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                Swal.fire({
-                    title: 'Успех!',
-                    text: data.message,
-                    icon: 'success',
-                    confirmButtonText: 'OK'
-                }).then(() => {
-                    // Перенаправляем на главную страницу
-                    window.location.href = '/';  // Например, на домашнюю страницу
-                });
-            } else {
-                Swal.fire({
-                    title: 'Ошибка!',
-                    text: data.message,
-                    icon: 'error',
-                    confirmButtonText: 'OK'
-                });
-            }
-        })
-        .catch(error => {
-            console.error("Ошибка:", error);
-            Swal.fire({
-                title: 'Ошибка!',
-                text: 'Произошла ошибка при попытке входа.',
-                icon: 'error',
-                confirmButtonText: 'OK'
-            });
-        });
-    });
-</script>
+    <div class="container">
+        <h1>Вход</h1>
+        <form method="POST" action="/login" id="loginForm">
+            <div class="form-row">
+                <label for="emailInput">Email:</label>
+                <input type="text" id="emailInput" name="email" required>
+            </div>
+            <div class="form-row">
+                <label for="passwordInput">Пароль:</label>
+                <input type="password" id="passwordInput" name="password" required>
+            </div>
+            <button type="submit">Войти</button>
+        </form>
+        <p>Еще нет аккаунта? <a href="/register">Зарегистрируйтесь</a></p>
+    </div>
+    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 </body>
 </html>
