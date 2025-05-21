@@ -2,7 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.wait import WebDriverWait
-
+from selenium.common.exceptions import TimeoutException
 from app.config import settings
 
 
@@ -31,13 +31,6 @@ def wait_for_element_to_be_present(locator):
     return EC.presence_of_element_located(locator)
 
 
-def wait_for_element_to_be_clickable(locator):
-    """
-    Ожидание, когда элемент станет кликабельным.
-    """
-    return EC.element_to_be_clickable(locator)
-
-
 def find_element_if_exists(driver, locator):
     """
     Ищет элемент, и если он существует, возвращает его, иначе возвращает None.
@@ -46,6 +39,20 @@ def find_element_if_exists(driver, locator):
     if elements:
         return elements[0]
     return None
+
+
+def wait_for_first_visible_element(driver, locator, timeout=10):
+    def _predicate(driver):
+        elements = driver.find_elements(*locator)
+        for el in elements:
+            if el.is_displayed():
+                return el
+        return False
+
+    try:
+        return WebDriverWait(driver, timeout).until(_predicate)
+    except TimeoutException:
+        return None
 
 
 def wait_for_script_condition(driver, script):

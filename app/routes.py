@@ -2,6 +2,8 @@ import os
 from flask import render_template, request, redirect, send_from_directory, render_template_string, url_for, \
     session, flash, jsonify
 from marshmallow import ValidationError
+
+from app.config import settings
 from app.exceptions import UserAlreadyExistsException
 from app.main import app
 from app.models import db
@@ -56,9 +58,11 @@ def login():
 def logout():
     session.pop('logged_in', None)
     session.pop('user_id', None)
-    session.pop('moodle_cookies', None)
-    session.pop('brs_cookies', None)
     session.pop('_flashes', None)
+    # Удаляем все ключи, заканчивающиеся на '_cookies'
+    keys_to_remove = [key for key in session.keys() if key.endswith('_cookies')]
+    for key in keys_to_remove:
+        session.pop(key, None)
     return jsonify({'success': True, 'message': 'Вы вышли из системы'})
 
 
@@ -99,7 +103,7 @@ def view_pages(url):
         return render_template('error_page.html', error=result), 404
 
 
-@app.route('/show_page/<int:page_id>')
+@app.route('/show/page/<int:page_id>')
 def show_page(page_id):
     success, result = ArchiveService.show_page(page_id)
     if not success:
@@ -107,7 +111,7 @@ def show_page(page_id):
     return render_template_string(result)
 
 
-@app.route('/view_domain_info/<path:url>')
+@app.route('/view/info/<path:url>')
 def view_domain_info(url):
     success, result = ArchiveService.view_domain_info(url)
     if success:
@@ -116,7 +120,7 @@ def view_domain_info(url):
         return render_template('error_page.html', error=result), 404
 
 
-@app.route('/get_domain_info/<int:page_id>')
+@app.route('/show/info/<int:page_id>')
 def get_domain_info(page_id):
     user_id = session.get('user_id')
     success, domain_info = ArchiveService.get_domain_info(page_id, user_id)
@@ -133,16 +137,18 @@ def download_file(filename):
     return send_from_directory(os.path.join(app.root_path, 'app', 'uploads', 'files'), filename)
 
 
-@app.route('/auth/check', methods=['GET'])
+@app.route('/auth/check', methods=['POST'])
 def check_auth_required():
-    auth_type = request.args.get('type')
-
-    if auth_type == 'brs':
-        cookies = session.get('brs_cookies')
-    elif auth_type == 'moodle':
-        cookies = session.get('moodle_cookies')
-    else:
-        return jsonify({'need_auth': True})  # на всякий случай
+    data = request.get_json()
+    url = data.get('url')
+    if not url:
+        return jsonify({'error': 'URL parameter missing'}), 400
+    site_name = settings.find_name_by_url(url)
+    if not site_name:
+        if "vk.com" in url:
+            return jsonify({'need_auth': True})
+        return jsonify({'need_auth': True})
+    cookies = session.get(site_name + '_cookies')
     need_auth = not bool(cookies)
+    print(need_auth)
     return jsonify({'need_auth': need_auth})
-

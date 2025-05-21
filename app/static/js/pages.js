@@ -65,7 +65,7 @@ function renderPage(page) {
         li.innerHTML = `
             <div class="version-info-container">
                 <div class="version-info">
-                    <a href="/show_page/${page.id}">
+                    <a href="/show/page/${page.id}">
                         Версия ${startIndex + index + 1} — ${formattedDate}
                     </a>
                 </div>
@@ -85,7 +85,7 @@ function toggleDomainInfo(button, pageId) {
     const domainInfoArea = document.getElementById(`domainInfoArea-${pageId}`);
 
     if (domainInfoArea.style.display === 'none' || domainInfoArea.innerHTML === '') {
-        fetch(`/get_domain_info/${pageId}`)
+        fetch(`/show/info/${pageId}`)
             .then(response => response.text())
             .then(html => {
                 domainInfoArea.innerHTML = html;
@@ -101,5 +101,7 @@ function toggleDomainInfo(button, pageId) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    changeSortOrder(currentSortOrder);
+    sortPages(currentSortOrder);        // Сначала сортируем
+    renderPage(currentPage);            // Потом рендерим нужную страницу
 });
+

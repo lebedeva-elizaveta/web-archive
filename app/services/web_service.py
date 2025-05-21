@@ -1,7 +1,7 @@
 import time
-
 from flask import session
 from selenium.webdriver.common.by import By
+from app.config import settings
 from app.services.auth_service import AuthService
 from app.services.selenium_service import get_driver, wait_for_script_condition, wait_for_element_to_disappear
 
@@ -33,10 +33,11 @@ def _authorize_and_get_cookies(url, credentials):
     try:
         auth_service = AuthService(driver, credentials)
         cookies = auth_service.login(url)
-        if "edu" in url:
-            session['moodle_cookies'] = cookies
-        elif "cs" in url:
-            session['brs_cookies'] = cookies
+        if "vk.com" in url:
+            return None
+        site_name = settings.find_name_by_url(url)
+        if site_name:
+            session[site_name + '_cookies'] = cookies
         return cookies
     finally:
         if 'vk.com' not in url:
@@ -44,13 +45,9 @@ def _authorize_and_get_cookies(url, credentials):
 
 
 def get_cookies(url):
-    cookies_mapping = {
-        "edu": 'moodle_cookies',
-        "cs": 'brs_cookies'
-    }
-    for key, session_key in cookies_mapping.items():
-        if key in url:
-            return session.get(session_key)
+    site_name = settings.find_name_by_url(url)
+    if site_name:
+        return session.get(site_name + '_cookies')
     return None
 
 

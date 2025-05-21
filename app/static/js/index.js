@@ -8,44 +8,27 @@ async function addPage() {
     }
 
     let needAuthWindow = false;
-    let unsupportedSite = false;
-
-    const isBRS = urlInput.includes("cs");
-    const isMoodle = urlInput.includes("edu");
-    const isVK = urlInput.includes("vk");
-
-    if (!isBRS && !isMoodle && !isVK && isProtected) {
-        unsupportedSite = true;
-    }
-
-    if (unsupportedSite) {
-        Swal.fire('Ошибка!', 'Пока поддерживаются только ВК, БРС и Moodle.', 'error');
-        return;
-    }
 
     try {
         if (isProtected) {
-            if (isBRS || isMoodle) {
-                Swal.fire({
-                    title: 'Проверка авторизации...',
-                    allowOutsideClick: false,
-                    didOpen: () => Swal.showLoading()
-                });
+            Swal.fire({
+                title: 'Проверка авторизации...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
 
-                if (isBRS) {
-                    const response = await fetch('/auth/check?type=brs');
-                    const authData = await response.json();
-                    if (authData.need_auth) needAuthWindow = true;
-                } else if (isMoodle) {
-                    const response = await fetch('/auth/check?type=moodle');
-                    const authData = await response.json();
-                    if (authData.need_auth) needAuthWindow = true;
-                }
+            // Запрашиваем без передачи type — бэкенд сам определит
+            const response = await fetch('/auth/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: urlInput }) // передаем url, чтобы бэк знал что проверять
+            });
 
-                Swal.close();
-            } else if (isVK) {
-                needAuthWindow = true;
-            }
+            const authData = await response.json();
+
+            if (authData.need_auth) needAuthWindow = true;
+
+            Swal.close();
         }
     } catch (error) {
         console.error("Ошибка при проверке авторизации:", error);
@@ -138,7 +121,7 @@ function toggleDomainInfo() {
         didOpen: () => Swal.showLoading()
     });
 
-    fetch(`/view_domain_info/${encodeURIComponent(urlInput)}`)
+    fetch(`/view/info/${encodeURIComponent(urlInput)}`)
         .then(response => response.text())
         .then(data => {
             Swal.close();

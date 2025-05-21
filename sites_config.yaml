@@ -1,0 +1,104 @@
+- name: brs
+  url: 'https://www.cs.vsu.ru/brs/'
+  steps:
+    - element:
+        by: id
+        value: login
+      action:
+        type: send_keys
+        value_from_credentials: login
+    - element:
+        by: id
+        value: password
+      action:
+        type: send_keys
+        value_from_credentials: password
+    - element:
+        by: id
+        value: button_login
+      action:
+        type: click
+- name: moodle
+  url: 'https://edu.vsu.ru/'
+  steps:
+    - element:
+        by: xpath
+        type: a
+        value: Вход
+      action:
+        type: click
+    - element:
+        by: id
+        value: username
+      action:
+        type: send_keys
+        value_from_credentials: login
+    - element:
+        by: id
+        value: password
+      action:
+        type: send_keys
+        value_from_credentials: password
+    - element:
+        by: id
+        value: loginbtn
+      action:
+        type: click
+- name: vk
+  url: 'https://vk.com/'
+  steps:
+    - optional: true
+      element:
+        by: xpath
+        type: button
+        value: Войти
+      action:
+        type: js_click
+    - element:
+        by: xpath
+        type: span
+        value: Войти другим способом
+      action:
+        type: click
+    - element:
+        by: name
+        value: login
+      action:
+        type: send_keys
+        value_from_credentials: login
+    - action:
+        type: send_keys
+        value: ENTER
+    - element:
+        by: xpath
+        type: span
+        value: Подтвердить другим способом
+      action:
+        type: click
+    - element:
+        by: xpath
+        type: span
+        value: Резервный код
+      action:
+        type: click
+    - element:
+        by: id
+        value: otp
+      action:
+        type: send_keys
+        value_from_credentials: code
+    - action:
+        type: send_keys
+        value: ENTER
+    - element:
+        by: name
+        value: password
+      action:
+        type: send_keys
+        value_from_credentials: password
+    - action:
+        type: send_keys
+        value: ENTER
+    - element:
+        by: url_contains
+        value: vk.com
