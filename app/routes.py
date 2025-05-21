@@ -2,8 +2,7 @@ import os
 from flask import render_template, request, redirect, send_from_directory, render_template_string, url_for, \
     session, flash, jsonify
 from marshmallow import ValidationError
-
-from app.config import settings
+from app.config import settings, Config
 from app.exceptions import UserAlreadyExistsException
 from app.main import app
 from app.models import db
@@ -152,3 +151,13 @@ def check_auth_required():
     need_auth = not bool(cookies)
     print(need_auth)
     return jsonify({'need_auth': need_auth})
+
+
+@app.route('/config', methods=['POST'])
+def receive_config():
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No JSON received'}), 400
+    Config.update_sites(data)
+    return jsonify({'status': 'config updated', 'sites_count': len(Config.SITES)})
+

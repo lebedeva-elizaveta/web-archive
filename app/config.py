@@ -1,5 +1,4 @@
 import os
-
 import yaml
 from dotenv import load_dotenv
 
@@ -17,7 +16,7 @@ class Config:
     VK_CODE = os.getenv('VK_CODE')
     VK_PASSWORD = os.getenv('VK_PASSWORD')
     IS_DOCKER = os.getenv('IS_DOCKER')
-    SITES = {}
+    SITES = []
     URL_NAME_MAPPING = {}
 
     @classmethod
@@ -32,7 +31,7 @@ class Config:
                 }
         except Exception as e:
             print(f"Ошибка загрузки YAML-конфига: {e}")
-            cls.SITES = {}
+            cls.SITES = []
             cls.URL_NAME_MAPPING = {}
 
     @classmethod
@@ -42,9 +41,26 @@ class Config:
                 return name
         return None
 
+    @classmethod
+    def update_sites(cls, new_site: dict):
+        existing_sites_by_name = {site['name']: site for site in cls.SITES}
+
+        name = new_site.get('name')
+        if not name:
+            print("Warning: site without name skipped")
+        if name in existing_sites_by_name:
+            existing_sites_by_name[name] = new_site
+        else:
+            existing_sites_by_name[name] = new_site
+        cls.SITES = list(existing_sites_by_name.values())
+        cls.URL_NAME_MAPPING = {
+            site["url"]: site["name"]
+            for site in cls.SITES
+            if site.get("name") != "vk"
+        }
+
 
 Config.load_yaml()
-
 settings = Config()
 
 FOLDER_FILES = 'app/uploads/files/'
