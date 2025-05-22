@@ -16,13 +16,13 @@
             <option value="id">id</option>
             <option value="name">name</option>
             <option value="xpath">xpath</option>
-            <option value="url_contains">url_contains</option>
+            <option value="url_contains">url</option>
         </select>
     </label>
 
     <label class="step-element-type-label flex-center-gap8-normal">
-        Тип:
-        <input class="step-element-type" type="text" placeholder="type (опционально)">
+        Тег:
+        <input class="step-element-type" type="text" placeholder="Внутри какого тега находится">
     </label>
 
     <label class="flex-center-gap8-normal">
@@ -39,26 +39,26 @@
     <label class="flex-center-gap8-normal">
         Тип действия:
         <select class="step-action-type">
-            <option value="send_keys" selected>send_keys</option>
-            <option value="click">click</option>
-            <option value="click_js">click_js</option>
+            <option value="send_keys" selected>Отправить данные</option>
+            <option value="click">Клик</option>
+            <option value="click_js">Клик с js</option>
         </select>
     </label>
 
     <label class="flex-center-gap8-normal">
-        Значение из:
+        Значение:
         <select class="step-action-value-type">
-            <option value="value" selected>value</option>
-            <option value="credentials">credentials</option>
+            <option value="value" selected>Ввести</option>
+            <option value="credentials">Передать при авторизации</option>
         </select>
     </label>
 
     <input type="text" class="step-action-value" placeholder="Значение действия">
     <select class="step-action-credentials-value">
-        <option value="">Выберите credentials</option>
-        <option value="login">login</option>
-        <option value="password">password</option>
-        <option value="code">code</option>
+        <option value="">Выберите, что передать</option>
+        <option value="login">Логин</option>
+        <option value="password">Пароль</option>
+        <option value="code">Код</option>
     </select>
 </div>
 
