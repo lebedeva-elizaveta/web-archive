@@ -149,7 +149,6 @@ def check_auth_required():
         return jsonify({'need_auth': True})
     cookies = session.get(site_name + '_cookies')
     need_auth = not bool(cookies)
-    print(need_auth)
     return jsonify({'need_auth': need_auth})
 
 

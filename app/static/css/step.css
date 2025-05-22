@@ -1,0 +1,92 @@
+.step {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 15px;
+    padding: 12px 20px 20px 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    position: relative;
+    font-family: Arial, sans-serif;
+}
+
+.remove-step-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background-color: #ff4d4f;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.flex-center-gap8-bold-cursor-pointer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.flex-center-gap8-normal {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: normal;
+}
+
+.step-element-check,
+.step-optional {
+  margin-right: 6px;
+}
+
+.step-element-fields,
+.step-action-fields {
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.step-element-by,
+.step-action-type,
+.step-action-value-type,
+.step-element-type,
+.step-element-value,
+.step-action-value,
+.step-action-credentials-value {
+  padding: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px;
+}
+
+.step-element-by,
+.step-action-value-type {
+  flex-shrink: 0;
+  width: 140px;
+}
+
+.step-action-type {
+  flex-shrink: 0;
+  width: 180px;
+}
+
+.step-element-type,
+.step-element-value,
+.step-action-value {
+  flex-grow: 1;
+}
+
+/* Для скрытого select */
+.step-action-credentials-value {
+  display: none;
+}

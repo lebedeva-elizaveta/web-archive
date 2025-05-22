@@ -5,11 +5,12 @@ let currentSortOrder = 'desc';
 
 function sortPages(order) {
     sortedPages = [...archivedPages].sort((a, b) => {
-        const dateA = new Date(a.timestamp);
-        const dateB = new Date(b.timestamp);
+        const dateA = new Date(a.timestamp * 1000);
+        const dateB = new Date(b.timestamp * 1000);
         return order === 'asc' ? dateA - dateB : dateB - dateA;
     });
 }
+
 
 function changeSortOrder(order) {
     currentSortOrder = order;
@@ -53,7 +54,7 @@ function renderPage(page) {
 
     currentItems.forEach((page, index) => {
         const li = document.createElement('li');
-        const date = new Date(page.timestamp);
+        const date = new Date(page.timestamp * 1000);
         const formattedDate = date.toLocaleString('ru-RU', {
             day: '2-digit',
             month: '2-digit',

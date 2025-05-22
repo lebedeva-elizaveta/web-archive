@@ -94,3 +94,63 @@ button:hover, .btn:hover {
     flex-wrap: wrap;
     margin-top: 20px;
 }
+
+.rules-container {
+                    font-family: Arial, sans-serif;
+                    text-align: left;
+                    line-height: 1.6;
+                    font-size: 14px;
+                    color: #222;
+                    max-height: 60vh;
+                    overflow-y: auto;
+                    padding-right: 8px;
+                }
+                .rules-container h3 {
+                    margin-top: 1em;
+                    font-weight: 700;
+                    font-size: 18px;
+                    color: #004085;
+                }
+                .rules-container ol {
+                    padding-left: 20px;
+                    margin-top: 0.3em;
+                }
+                .rules-container li {
+                    margin-bottom: 0.7em;
+                }
+                .rules-container ul {
+                    padding-left: 20px;
+                    margin: 0.2em 0 0.7em 0;
+                }
+                .rules-container code {
+                    background-color: #f8f9fa;
+                    border: 1px solid #ddd;
+                    padding: 2px 4px;
+                    border-radius: 4px;
+                    font-size: 13px;
+                    font-family: monospace;
+                }
+                .rules-container pre {
+                    background-color: #f1f1f1;
+                    border: 1px solid #ccc;
+                    border-radius: 6px;
+                    padding: 10px;
+                    font-size: 13px;
+                    overflow-x: auto;
+                    margin-bottom: 1em;
+                }
+                .highlight-action {
+                    font-weight: 600;
+                    color: #155724;
+                    background-color: #d4edda;
+                    padding: 2px 6px;
+                    border-radius: 4px;
+                    font-family: monospace;
+                }
+                .tip {
+                    background-color: #e2f0d9;
+                    border-left: 4px solid #a3cf8f;
+                    padding: 10px;
+                    margin-top: 1em;
+                    font-style: italic;
+                }

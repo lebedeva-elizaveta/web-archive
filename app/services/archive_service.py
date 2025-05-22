@@ -1,5 +1,7 @@
 import asyncio
 import os
+from datetime import datetime
+
 from bs4 import BeautifulSoup
 from marshmallow import ValidationError
 
@@ -18,6 +20,11 @@ class ArchiveService:
     @classmethod
     def create_page(cls, data):
         try:
+            ts = data.get('timestamp')
+            if isinstance(ts, str):
+                dt = datetime.fromisoformat(ts)
+                data['timestamp'] = int(dt.timestamp())
+
             validated_data = ArchivedPageSchema().load(data)
             new_page = cls.model_page(**validated_data)
             db.session.add(new_page)
