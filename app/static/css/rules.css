@@ -1,0 +1,59 @@
+.rules-container {
+    max-width: 900px;
+    margin: 0 auto;
+    font-family: sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.rules-container h3 {
+    margin-top: 1.5em;
+    color: #333;
+}
+
+.rules-container h4 {
+    margin-top: 1em;
+    color: #555;
+}
+
+.rules-container p {
+    margin-bottom: 1em;
+}
+
+.rules-container ul,
+.rules-container ol {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+.rules-container code {
+    background-color: #f8f8f8;
+    padding: 2px 4px;
+    font-family: monospace;
+    border-radius: 4px;
+}
+
+.rules-container pre {
+    background-color: #f4f4f4;
+    padding: 10px;
+    overflow-x: auto;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.rules-container table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1em;
+}
+
+.rules-container th,
+.rules-container td {
+    padding: 6px;
+    border: 1px solid #ccc;
+}
+
+.rules-container thead tr {
+    background-color: #007bff;
+    color: white;
+}

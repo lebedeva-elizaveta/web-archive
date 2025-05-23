@@ -1,3 +1,4 @@
+import time
 from marshmallow import Schema, fields
 
 
@@ -5,7 +6,7 @@ class ArchivedPageSchema(Schema):
     id = fields.Int(dump_only=True)
     url = fields.URL(required=True)
     html = fields.Str(required=True)
-    timestamp = fields.Int(required=True)
+    timestamp = fields.Int(missing=lambda: int(time.time()))
     user_id = fields.Int(required=True)
     protected = fields.Bool(required=True)
 
